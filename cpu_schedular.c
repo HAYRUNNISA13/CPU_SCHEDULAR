@@ -129,8 +129,39 @@ void assign_processes(Process *processes[], int n, Queue *waiting_queue, int *ra
             }
         } else {
             handle_insufficient_ram(p, waiting_queue, output_file);
-        }
-    }
+ }
+}
+}
+
+void fcfs_scheduler(Process *processes[], int n, FILE *output_file, Queue *waiting_queue, int *ram_available) {
+    printf("CPU-1 que1(priority-0)(FCFS):");
+    for (int i = 0; i < n; i++) {
+        if (processes[i]->priority == 0) {
+            assign_processes(&processes[i], 1, waiting_queue, ram_available, output_file);
+            printf("%s-", processes[i]->name);
+        }
+    }
+    printf("\n");
+}
+
+void sjf_scheduler(Process *processes[], int n, FILE *output_file, Queue *waiting_queue, int *ram_available) {
+    printf("CPU-2 que2(priority-1) (Sjf):");
+    Process *priority1_processes[200];
+    int priority1_count = 0;
+
+    for (int i = 0; i < n; i++) {
+        if (processes[i]->priority == 1) {
+            priority1_processes[priority1_count++] = processes[i];
+        }
+    }
+
+    sort_processes_by_burst_time(priority1_processes, priority1_count);
+
+    for (int i = 0; i < priority1_count; i++) {
+        assign_processes(&priority1_processes[i], 1, waiting_queue, ram_available, output_file);
+        printf("%s-", priority1_processes[i]->name);
+    }
+   printf("\n");
 }
 
 int main(int argc, char *argv[]) {
