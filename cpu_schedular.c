@@ -129,8 +129,8 @@ void assign_processes(Process *processes[], int n, Queue *waiting_queue, int *ra
             }
         } else {
             handle_insufficient_ram(p, waiting_queue, output_file);
- }
-}
+        }
+    }
 }
 
 void fcfs_scheduler(Process *processes[], int n, FILE *output_file, Queue *waiting_queue, int *ram_available) {
@@ -162,6 +162,59 @@ void sjf_scheduler(Process *processes[], int n, FILE *output_file, Queue *waitin
         printf("%s-", priority1_processes[i]->name);
     }
    printf("\n");
+}
+void rr_scheduler(Process *processes[], int n, int quantum, FILE *output_file, Queue *waiting_queue, int *ram_available) {
+    if (quantum == 8) {
+        printf("CPU-2 que3(priority-2) (RR-q8):");
+    } else {
+        printf("CPU-2 que4(priority-3) (RR-q16):");
+    }
+
+    int *remaining_burst = (int *)malloc(n * sizeof(int));
+    for (int i = 0; i < n; i++) {
+        remaining_burst[i] = processes[i]->burst_time;
+    }
+
+    while (1) {
+        int all_completed = 1;
+
+        for (int i = 0; i < n; i++) {
+            if (remaining_burst[i] > 0 && (processes[i]->priority == 2 || processes[i]->priority == 3)) {
+                all_completed = 0;
+
+                if (remaining_burst[i] <= quantum) {
+                    if ((quantum == 8 && processes[i]->priority == 2) ||
+                        (quantum == 16 && processes[i]->priority == 3)) {
+                        
+                        assign_processes(&processes[i], 1, waiting_queue, ram_available, output_file);
+                        remaining_burst[i] = 0;
+                        
+                        release_ram(processes[i], ram_available, output_file);
+                        printf("%s-", processes[i]->name);
+                    }
+                    remaining_burst[i] = 0;
+                } else {
+                    if ((quantum == 8 && processes[i]->priority == 2) ||
+                        (quantum == 16 && processes[i]->priority == 3)) {
+                        
+                        assign_processes(&processes[i], 1, waiting_queue, ram_available, output_file);
+                        
+                        enqueue(waiting_queue, processes[i], output_file);
+                        fprintf(output_file, "Process %s run until the defined quantum time and is queued again because the process is not completed.\n", processes[i]->name);
+                        printf("%s-", processes[i]->name);
+                    }
+                }
+                remaining_burst[i] -= quantum;
+            }
+        }
+
+        if (all_completed) {
+            break;
+        }
+    }
+
+    free(remaining_burst);
+    printf("\n");
 }
 
 int main(int argc, char *argv[]) {
