@@ -85,7 +85,53 @@ void sort_processes_by_arrival(Process *processes[], int n) {
     }
 }
 
+void sort_processes_by_burst_time(Process *processes[], int n) {
+    for (int i = 0; i < n - 1; i++) {
+        for (int j = 0; j < n - i - 1; j++) {
+            if (processes[j]->burst_time > processes[j + 1]->burst_time) {
+                Process *temp = processes[j];
+                processes[j] = processes[j + 1];
+                processes[j + 1] = temp;
+            }
+        }
+    }
+}
 
+int current_time = 0;
+
+int check_ram_availability(Process *process, int ram_available) {
+    return process->ram_required <= ram_available;
+}
+
+void assign_process(Process *p, int cpu, int *ram_available, FILE *output_file) {
+    *ram_available -= p->ram_required;
+    print_process_assigned(p, cpu, output_file);
+    fprintf(output_file, "Process %s starts at time %d.\n", p->name, current_time);
+    current_time += p->burst_time;
+    fprintf(output_file, "Process %s completes at time %d.\n", p->name, current_time);
+    print_process_completed(p, output_file);
+    release_ram(p, ram_available, output_file);
+}
+
+void handle_insufficient_ram(Process *p, Queue *waiting_queue, FILE *output_file) {
+    fprintf(output_file, "Process %s could not be assigned due to insufficient RAM.\n", p->name);
+    enqueue(waiting_queue, p, output_file);
+}
+
+void assign_processes(Process *processes[], int n, Queue *waiting_queue, int *ram_available, FILE *output_file) {
+    for (int i = 0; i < n; i++) {
+        Process *p = processes[i];
+        if (check_ram_availability(p, *ram_available)) {
+            if (p->priority == 0) {
+                assign_process(p, 1, ram_available, output_file);
+            } else {
+                assign_process(p, 2, ram_available, output_file);
+            }
+        } else {
+            handle_insufficient_ram(p, waiting_queue, output_file);
+        }
+    }
+}
 
 int main(int argc, char *argv[]) {
     if (argc != 2) {
