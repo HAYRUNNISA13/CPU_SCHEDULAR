@@ -24,6 +24,40 @@ typedef struct {
     Process *rear;
 } Queue;
 
+void initialize_queue(Queue *q) {
+    q->front = NULL;
+    q->rear = NULL;
+}
+
+int is_queue_empty(Queue *q) {
+    return q->front == NULL;
+}
+
+void enqueue(Queue *q, Process *p, FILE *output_file) {
+    if (is_queue_empty(q)) {
+        q->front = p;
+        q->rear = p;
+        p->next = NULL;
+    } else {
+        q->rear->next = p;
+        q->rear = p;
+        p->next = NULL;
+    }
+    fprintf(output_file, "Process %s is queued due to insufficient RAM.\n", p->name);
+}
+
+Process *dequeue(Queue *q) {
+    if (!is_queue_empty(q)) {
+        Process *temp = q->front;
+        q->front = q->front->next;
+        if (q->front == NULL) {
+            q->rear = NULL;
+        }
+        return temp;
+    } else {
+        return NULL;
+}
+}
 
 
 int main(int argc, char *argv[]) {
