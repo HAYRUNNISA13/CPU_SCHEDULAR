@@ -60,6 +60,33 @@ Process *dequeue(Queue *q) {
 }
 
 
+void release_ram(Process *p, int *ram_available, FILE *output_file) {
+    *ram_available += p->ram_required;
+    fprintf(output_file, "Process %s releases RAM.\n", p->name);
+}
+
+void print_process_assigned(Process *p, int cpu, FILE *output_file) {
+    fprintf(output_file, "Process %s is assigned to CPU-%d.\n", p->name, cpu);
+}
+
+void print_process_completed(Process *p, FILE *output_file) {
+    fprintf(output_file, "Process %s is completed and terminated.\n", p->name);
+}
+
+void sort_processes_by_arrival(Process *processes[], int n) {
+    for (int i = 0; i < n - 1; i++) {
+        for (int j = 0; j < n - i - 1; j++) {
+            if (processes[j]->arrival_time > processes[j + 1]->arrival_time) {
+                Process *temp = processes[j];
+                processes[j] = processes[j + 1];
+                processes[j + 1] = temp;
+            }
+        }
+    }
+}
+
+
+
 int main(int argc, char *argv[]) {
     if (argc != 2) {
         printf("Usage: %s input.txt\n", argv[0]);
@@ -122,29 +149,4 @@ int main(int argc, char *argv[]) {
     }
 
     return 0;
-}
-
-void release_ram(Process *p, int *ram_available, FILE *output_file) {
-    *ram_available += p->ram_required;
-    fprintf(output_file, "Process %s releases RAM.\n", p->name);
-}
-
-void print_process_assigned(Process *p, int cpu, FILE *output_file) {
-    fprintf(output_file, "Process %s is assigned to CPU-%d.\n", p->name, cpu);
-}
-
-void print_process_completed(Process *p, FILE *output_file) {
-    fprintf(output_file, "Process %s is completed and terminated.\n", p->name);
-}
-
-void sort_processes_by_arrival(Process *processes[], int n) {
-    for (int i = 0; i < n - 1; i++) {
-        for (int j = 0; j < n - i - 1; j++) {
-            if (processes[j]->arrival_time > processes[j + 1]->arrival_time) {
-                Process *temp = processes[j];
-                processes[j] = processes[j + 1];
-                processes[j + 1] = temp;
-            }
-        }
-    }
 }
