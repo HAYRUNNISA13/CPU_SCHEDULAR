@@ -203,29 +203,77 @@ void fcfs_scheduler(Process *processes[], int n, FILE *output_file, Queue *waiti
     printf("\n");
 }
 
-// Function to perform SJF scheduling for priority 1 processes on CPU2
-void sjf_scheduler(Process *processes[], int n, FILE *output_file, Queue *waiting_queue, int *ram_available) {
-    printf("CPU-2 que2(priority-1) (SJF):");
-    Process *priority1_processes[200];
-    int priority1_count = 0;
+void sjf_scheduler(Process *processes[], int n, FILE *output_file, Queue *waiting_queue, int *ram_available)
+{
+    // Print the Scheduler Information
+    printf("CPU-2 que2(priority-1) (Sjf):");
 
-    for (int i = 0; i < n; i++) {
-        if (processes[i]->priority == 1) {
+    // Initialize Variables
+    Process *priority1_processes[200]; // Array to store high priority processes
+    int priority1_count = 0; // Count of high priority processes
+
+    // Loop Through Processes to Select High Priority Processes
+    for (int i = 0; i < n; i++)
+    {
+        if (processes[i]->priority == 1)
+        {
             priority1_processes[priority1_count++] = processes[i];
         }
     }
 
-    // Sort priority 1 processes by burst time
-    sort_processes_by_burst_time(priority1_processes, priority1_count);
+    // Execute the SJF Algorithm
+    int current_time = 0; // Current time
+    int completed = 0; // Count of completed high priority processes
 
-    for (int i = 0; i < priority1_count; i++) {
-        // Assign priority 1 processes to CPU2
-        assign_processes(&priority1_processes[i], 2, waiting_queue, ram_available, output_file);
-        printf("%s", priority1_processes[i]->name); // Print process name
-        if (i < priority1_count - 1) {
-            printf("-");
+    while (completed < priority1_count)
+    {
+        int index = -1; // Index of the process with the shortest burst time
+
+        // Find the process with the shortest burst time among the high priority processes
+        for (int i = 0; i < priority1_count; i++)
+        {
+            if (priority1_processes[i]->arrival_time <= current_time &&
+                priority1_processes[i]->remaining_time > 0)
+            {
+                if (index == -1 || priority1_processes[i]->burst_time < priority1_processes[index]->burst_time)
+                {
+                    index = i;
+                }
+            }
+        }
+
+        // Assign Process to CPU and Update Time
+        if (index != -1)
+        {
+            Process *p = priority1_processes[index];
+            if (check_ram_availability(p, *ram_available))
+            {
+                int start_time = current_time;
+                current_time += p->burst_time;
+                p->remaining_time = 0;
+                *ram_available -= p->ram_required;
+
+                fprintf(output_file, "Process %s is assigned to CPU-2.\n", p->name);
+                fprintf(output_file, "Process %s starts at time %d on CPU-2.\n", p->name, start_time);
+                fprintf(output_file, "Process %s completes at time %d.\n", p->name, current_time);
+                print_process_completed(p, output_file);
+                release_ram(p, ram_available, output_file);
+
+                completed++;
+                printf("-%s", p->name);
+            }
+            else
+            {
+                handle_insufficient_ram(p, waiting_queue, output_file);
+            }
+        }
+        else
+        {
+            current_time++; // No suitable process found, increment current time
         }
     }
+
+    // Print New Line
     printf("\n");
 }
 
